@@ -1,0 +1,236 @@
+#include <Ultrasonic.h>
+// esse funciona
+// === Definições dos pinos ===
+// Frente
+#define IN1 6
+#define IN2 5
+#define IN3 4
+#define IN4 3
+#define ENA 7  // Enable motor A (frente)
+#define ENB 2  // Enable motor B (frente)
+
+// Trás
+#define IN1P 9
+#define IN2P 10
+#define IN3P 11
+#define IN4P 12
+#define ENAP 8   // Enable motor A (trás) 
+#define ENBP 13  // Enable motor B (trás)
+
+// Sensor Ultrassônico
+#define TRIGGER_PIN 22
+#define ECHO_PIN 23
+
+// === Velocidades dos motores ===
+int velocidadeA = 70;   // Motor frontal direito
+int velocidadeB = 80;   // Motor frontal esquerdo
+int velocidadeC = 70;   // Motor traseiro direito
+int velocidadeD = 90;  // Motor traseiro esquerdo
+
+// === Objeto do sensor ultrassônico ===
+Ultrasonic ultra(TRIGGER_PIN, ECHO_PIN);
+int distancia;
+
+// === Função para ler a distância ===
+int lerSensor() {
+  distancia = ultra.read(CM);
+  return distancia;
+}
+
+// === Setup ===
+void setup() {
+  // Motores dianteiros
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+  pinMode(ENA, OUTPUT);
+  pinMode(ENB, OUTPUT);
+
+  // Motores traseiros
+  pinMode(IN1P, OUTPUT);
+  pinMode(IN2P, OUTPUT);
+  pinMode(IN3P, OUTPUT);
+  pinMode(IN4P, OUTPUT);
+  pinMode(ENAP, OUTPUT);
+  pinMode(ENBP, OUTPUT);
+
+  // Sensor ultrassônico
+  pinMode(TRIGGER_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  Serial.begin(9600);
+}
+
+// === Funções de movimento ===
+void frente() {
+  // Motores traseiros
+  analogWrite(ENAP, velocidadeC);
+  digitalWrite(IN1P, HIGH);
+  digitalWrite(IN2P, LOW);
+
+  analogWrite(ENBP, velocidadeD);
+  digitalWrite(IN3P, LOW);
+  digitalWrite(IN4P, HIGH);
+
+  // Motores dianteiros
+  analogWrite(ENA, velocidadeB);
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  analogWrite(ENB, velocidadeA);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+
+  // delay(tempo);
+}
+
+void tras(int tempo) {
+  analogWrite(ENAP, velocidadeC);
+  digitalWrite(IN1P, LOW);
+  digitalWrite(IN2P, HIGH);
+
+  analogWrite(ENBP, velocidadeD);
+  digitalWrite(IN3P, HIGH);
+  digitalWrite(IN4P, LOW);
+
+  analogWrite(ENA, velocidadeB);
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+
+  analogWrite(ENB, velocidadeA);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+  delay(tempo);
+}
+
+void direita() {
+  analogWrite(ENAP, velocidadeC);
+  digitalWrite(IN1P, LOW);
+  digitalWrite(IN2P, HIGH);
+
+  analogWrite(ENBP, velocidadeD);
+  digitalWrite(IN3P, LOW);
+  digitalWrite(IN4P, HIGH);
+
+  analogWrite(ENA, velocidadeB);
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  analogWrite(ENB, velocidadeA);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+//   delay(tempo);
+}
+
+void esquerda() {
+  analogWrite(ENAP, velocidadeC);
+  digitalWrite(IN1P, HIGH);
+  digitalWrite(IN2P, LOW);
+
+  analogWrite(ENBP, velocidadeD);
+  digitalWrite(IN3P, HIGH);
+  digitalWrite(IN4P, LOW);
+
+  analogWrite(ENA, velocidadeB);
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+
+  analogWrite(ENB, velocidadeA);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+
+  // delay(tempo);
+}
+
+void parar() {
+  // Frente
+  analogWrite(ENA, 0);
+  analogWrite(ENB, 0);
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+
+  // Trás
+  analogWrite(ENAP, 0);
+  analogWrite(ENBP, 0);
+  digitalWrite(IN1P, LOW);
+  digitalWrite(IN2P, LOW);
+  digitalWrite(IN3P, LOW);
+  digitalWrite(IN4P, LOW);
+
+}
+#define IR1 A0
+#define IR2 A1
+
+#define IR4 A3
+#define IR5 A4
+
+// === Loop Principal ===
+void loop() {
+  // int distancia = lerSensor();
+  // Serial.print("Distância: ");
+  // Serial.print(distancia);
+  // Serial.println(" cm");
+
+  // if (distancia < 15) {
+  //   parar();
+  //   tras(1000);
+  //   direita(3000);
+  //   frente(4000);
+  //   esquerda(2500);
+  //   frente(3000);
+  //   esquerda(3000);
+  //   frente(2000);
+  //   direita(3000);
+  //   frente(3000);
+  //   //esquerda(3000);
+    
+
+  //   Serial.println(" Objeto a 15 cm. Robô parado!");
+  // }
+  // else{
+  //   frente(300);
+
+  // }
+
+  if(analogRead(IR1) < 200 or analogRead(IR2) < 200) {
+  esquerda();
+  delay(100);
+
+  }
+   else if(analogRead(IR4) < 200 or analogRead(IR5) < 200) {
+  direita();
+  delay(100);
+
+  }
+  else 
+  frente();
+//   delay(100);
+// }
+//  int distancia = lerSensor();
+//   Serial.print("Distância: ");
+//   Serial.print(distancia);
+//   Serial.println(" cm");
+
+//   if (distancia < 10) {
+//     parar();
+//     tras(500);
+//     parar();
+//     delay(500);
+//     direita(3000);
+//     frente(2000);
+//     esquerda(3000);
+//     frente(6000);
+//     esquerda(2600);
+//     frente(2000);
+//     direita(3000);
+
+//   }
+//   else {
+//     frente(300);
+//   }
+}
