@@ -1,0 +1,186 @@
+#include <Ultrasonic.h>
+
+// === Definições dos pinos ===
+// Frente
+#define IN1 6
+#define IN2 5
+#define IN3 4
+#define IN4 3
+#define ENA 7  // Enable motor A (frente)
+#define ENB 2  // Enable motor B (frente)
+
+// Trás
+#define IN1P 9
+#define IN2P 10
+#define IN3P 11
+#define IN4P 12
+#define ENAP 8   // Enable motor A (trás) 
+#define ENBP 13  // Enable motor B (trás)
+
+// Sensor Ultrassônico
+#define TRIGGER_PIN 22
+#define ECHO_PIN 23
+
+// === Velocidades dos motores ===
+int velocidadeA = 70;   // Motor frontal direito
+int velocidadeB = 80;   // Motor frontal esquerdo
+int velocidadeC = 70;   // Motor traseiro direito
+int velocidadeD = 90;   // Motor traseiro esquerdo
+
+// === Objeto do sensor ultrassônico ===
+Ultrasonic ultra(TRIGGER_PIN, ECHO_PIN);
+int distancia;
+
+// === Sensores IR ===
+#define IR1 A0
+#define IR2 A1
+#define IR4 A3
+#define IR5 A4
+
+// === Função para ler a distância ===
+int lerSensor() {
+  distancia = ultra.read(CM);
+  return distancia;
+}
+
+// === Setup ===
+void setup() {
+  pinMode(IN1, OUTPUT); pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT); pinMode(IN4, OUTPUT);
+  pinMode(ENA, OUTPUT); pinMode(ENB, OUTPUT);
+
+  pinMode(IN1P, OUTPUT); pinMode(IN2P, OUTPUT);
+  pinMode(IN3P, OUTPUT); pinMode(IN4P, OUTPUT);
+  pinMode(ENAP, OUTPUT); pinMode(ENBP, OUTPUT);
+
+  pinMode(TRIGGER_PIN, OUTPUT); pinMode(ECHO_PIN, INPUT);
+
+  pinMode(IR1, INPUT); pinMode(IR2, INPUT);
+  pinMode(IR4, INPUT); pinMode(IR5, INPUT);
+
+  Serial.begin(9600);
+}
+
+// === Funções de movimento ===
+void frente() {
+  analogWrite(ENAP, velocidadeC);
+  digitalWrite(IN1P, HIGH); digitalWrite(IN2P, LOW);
+  analogWrite(ENBP, velocidadeD);
+  digitalWrite(IN3P, LOW); digitalWrite(IN4P, HIGH);
+
+  analogWrite(ENA, velocidadeB);
+  digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW);
+  analogWrite(ENB, velocidadeA);
+  digitalWrite(IN3, LOW); digitalWrite(IN4, HIGH);
+}
+
+void tras(int tempo) {
+  analogWrite(ENAP, velocidadeC);
+  digitalWrite(IN1P, LOW); digitalWrite(IN2P, HIGH);
+  analogWrite(ENBP, velocidadeD);
+  digitalWrite(IN3P, HIGH); digitalWrite(IN4P, LOW);
+
+  analogWrite(ENA, velocidadeB);
+  digitalWrite(IN1, LOW); digitalWrite(IN2, HIGH);
+  analogWrite(ENB, velocidadeA);
+  digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW);
+
+  delay(tempo);
+}
+
+void direita() {
+  analogWrite(ENAP, velocidadeC);
+  digitalWrite(IN1P, LOW); digitalWrite(IN2P, HIGH);
+  analogWrite(ENBP, velocidadeD);
+  digitalWrite(IN3P, LOW); digitalWrite(IN4P, HIGH);
+
+  analogWrite(ENA, velocidadeB);
+  digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW);
+  analogWrite(ENB, velocidadeA);
+  digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW);
+}
+
+void esquerda() {
+  analogWrite(ENAP, velocidadeC);
+  digitalWrite(IN1P, HIGH); digitalWrite(IN2P, LOW);
+  analogWrite(ENBP, velocidadeD);
+  digitalWrite(IN3P, HIGH); digitalWrite(IN4P, LOW);
+
+  analogWrite(ENA, velocidadeB);
+  digitalWrite(IN1, LOW); digitalWrite(IN2, HIGH);
+  analogWrite(ENB, velocidadeA);
+  digitalWrite(IN3, LOW); digitalWrite(IN4, HIGH);
+}
+
+void parar() {
+  analogWrite(ENA, 0); analogWrite(ENB, 0);
+  digitalWrite(IN1, LOW); digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW); digitalWrite(IN4, LOW);
+
+  analogWrite(ENAP, 0); analogWrite(ENBP, 0);
+  digitalWrite(IN1P, LOW); digitalWrite(IN2P, LOW);
+  digitalWrite(IN3P, LOW); digitalWrite(IN4P, LOW);
+}
+
+// === Loop Principal ===
+void loop() {
+  // int distancia = lerSensor();
+  // Serial.print("Distancia: "); Serial.println(distancia);
+
+  // if (distancia < 15) {
+  //   parar(); delay(300);
+  //   tras(800);
+  //   parar(); delay(300);
+  //   direita(); delay(800);
+  //   frente(); delay(3500);
+  //   esquerda(); delay(1000);
+  //   frente(); delay(2500);
+  //   return;
+  // }
+
+  // Leitura dos sensores IR
+  int s1 = analogRead(IR1);
+  int s2 = analogRead(IR2);
+  int s4 = analogRead(IR4);
+  int s5 = analogRead(IR5);
+
+  int limiar = 700;
+  bool ir1 = s1 < limiar;
+  bool ir2 = s2 < limiar;
+  bool ir4 = s4 < limiar;
+  bool ir5 = s5 < limiar;
+
+  // --- Lógica do seguidor ---
+  if (ir1 && ir2 && ir4 && ir5) {
+    frente();
+  }
+  else if (!ir1 && !ir2 && !ir4 && ir5) {
+    direita(); delay(200);
+  }
+  else if (ir1 && !ir2 && !ir4 && !ir5) {
+    esquerda(); delay(200);
+  }
+  else if (ir1 || ir2) {
+    esquerda(); delay(100);
+  }
+  else if (ir4 || ir5) {
+    direita(); delay(100);
+  }
+  else if (ir4 && ir2) {
+    int somad = 0, somae = 0;
+    for (int i = 0; i < 3; i++) {
+      direita(); delay(500);
+      somae += s5;
+      esquerda(); delay(500);
+      somad += s1;
+    }
+    if (somad < somae) {
+      direita(); delay(1000);
+    } else {
+      esquerda(); delay(1000);
+    }
+  }
+  else {
+    frente();
+  }
+}
